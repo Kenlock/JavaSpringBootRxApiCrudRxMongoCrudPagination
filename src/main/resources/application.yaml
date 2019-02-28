@@ -1,0 +1,11 @@
+debug: true
+logging:
+  level:
+    web: debug
+
+spring:
+  data:
+    mongodb:
+      database: "boot_reactive_todo"
+      port: 27017
+      host: localhost
