@@ -24,45 +24,40 @@ public class PageMeta {
     }
 
 
-    public static PageMeta build(Collection resources, String basePath, int page, int pageSize, Mono<Long> totalItemsCount) {
+    public static PageMeta build(Collection resources, String basePath, int page, int pageSize, Long totalItemsCount) {
         PageMeta pageMeta = new PageMeta();
         pageMeta.setOffset((page - 1) * pageSize);
         pageMeta.setPageSize(pageSize);
         pageMeta.setCurrentItemsCount(resources.size());
         pageMeta.setCurrentPage(page);
-        pageMeta.setHook(totalItemsCount);
-        Mono<Object> hooka = totalItemsCount.map(value -> {
 
-            pageMeta.setTotalItemsCount(value);
-            pageMeta.setTotalPageCount((int) Math.ceil(pageMeta.getTotalItemsCount() / pageMeta.getPageSize()));
-            pageMeta.setHasNextPage(pageMeta.getCurrentPageNumber() < pageMeta.getPageCount());
-            pageMeta.setHasPrevPage(pageMeta.getCurrentPageNumber() > 1);
-            if (pageMeta.hasNext) {
-                pageMeta.setNextPageNumber(pageMeta.getCurrentPageNumber() + 1);
-                pageMeta.setNextPageUrl(String.format("%s?page_size=%d&page=%d",
-                        basePath, pageMeta.getPageSize(), pageMeta.getNextPageNumber()));
-            } else {
-                pageMeta.setNextPageNumber(pageMeta.getPageCount());
-                pageMeta.setNextPageUrl(String.format("%s?page_size=%d&page=%d",
-                        basePath, pageMeta.getPageSize(), pageMeta.getNextPageNumber()));
-            }
 
-            if (pageMeta.hasPrevPage) {
-                pageMeta.setPrevPageNumber(pageMeta.getCurrentPageNumber() - 1);
+        pageMeta.setTotalItemsCount(totalItemsCount);
+        pageMeta.setTotalPageCount((int) Math.ceil(pageMeta.getTotalItemsCount() / pageMeta.getPageSize()));
+        pageMeta.setHasNextPage(pageMeta.getCurrentPageNumber() < pageMeta.getPageCount());
+        pageMeta.setHasPrevPage(pageMeta.getCurrentPageNumber() > 1);
+        if (pageMeta.hasNext) {
+            pageMeta.setNextPageNumber(pageMeta.getCurrentPageNumber() + 1);
+            pageMeta.setNextPageUrl(String.format("%s?page_size=%d&page=%d",
+                    basePath, pageMeta.getPageSize(), pageMeta.getNextPageNumber()));
+        } else {
+            pageMeta.setNextPageNumber(pageMeta.getPageCount());
+            pageMeta.setNextPageUrl(String.format("%s?page_size=%d&page=%d",
+                    basePath, pageMeta.getPageSize(), pageMeta.getNextPageNumber()));
+        }
 
-                pageMeta.setPrevPageUrl(String.format("%s?page_size=%d&page=%d",
-                        basePath, pageMeta.getPageSize(),
-                        pageMeta.getPrevPageNumber()));
-            } else {
-                pageMeta.setPrevPageNumber(1);
-                pageMeta.setPrevPageUrl(String.format("%s?page_size=%d&page=%d",
-                        basePath, pageMeta.getPageSize(), pageMeta.getPrevPageNumber()));
-            }
+        if (pageMeta.hasPrevPage) {
+            pageMeta.setPrevPageNumber(pageMeta.getCurrentPageNumber() - 1);
 
-            return null;
-        });
+            pageMeta.setPrevPageUrl(String.format("%s?page_size=%d&page=%d",
+                    basePath, pageMeta.getPageSize(),
+                    pageMeta.getPrevPageNumber()));
+        } else {
+            pageMeta.setPrevPageNumber(1);
+            pageMeta.setPrevPageUrl(String.format("%s?page_size=%d&page=%d",
+                    basePath, pageMeta.getPageSize(), pageMeta.getPrevPageNumber()));
+        }
 
-        hooka.subscribe();
         return pageMeta;
 
     }

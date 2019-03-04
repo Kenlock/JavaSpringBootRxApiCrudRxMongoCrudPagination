@@ -17,7 +17,6 @@ import reactor.core.publisher.Mono;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 //@CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -127,22 +126,33 @@ public class TodosController {
     }
 
     private Mono<AppResponse> getResponseFromTodosFlux(Flux<Todo> todos, ServerHttpRequest request, int page, int pageSize) {
-        Mono<AppResponse> monoResult = todos.collectList().flatMap(new Function<List<Todo>, Mono<? extends AppResponse>>() {
-            @Override
-            public Mono<? extends AppResponse> apply(List<Todo> todos) {
-                // TODO: I really have to improve the asynchronosicty of that count()
+        // All credits go for @cheron.antoine, he gave me the solution for making this to work:
+        // https://medium.com/@cheron.antoine/reactor-java-2-how-to-manipulate-the-data-inside-mono-and-flux-b36ae383b499
 
-                PageMeta pageMeta = PageMeta.build(todos, request.getURI().getPath(), page, pageSize, todosRepository.count());
-                // PageImpl<Todo> pageMeta = new PageImpl<>(todos, pageRequest, todosRepository.count().block());
-                return Mono.just(new TodoListResponse(pageMeta, getTodos(todos)));
+        /* More readable code, but longer
+        return todos.collectList().flatMap(new Function<List<Todo>, Mono<AppResponse>>() {
+            @Override
+            public Mono<AppResponse> apply(List<Todo> todos) {
+                return todosRepository.count().map(new Function<Long, PageMeta>() {
+                    @Override
+                    public PageMeta apply(Long totalItemsCount) {
+                        return PageMeta.build(todos, request.getURI().getPath(), page, pageSize, totalItemsCount);
+                    }
+                }).map(new Function<PageMeta, AppResponse>() {
+                    @Override
+                    public AppResponse apply(PageMeta pageMeta) {
+                        return TodoListResponse.build(todos, pageMeta);
+                    }
+                });
             }
         });
-        return monoResult;
+        */
+
+        // Less readable but less code, read the above if this one is hard to read, they are equivalent
+        return todos.collectList().flatMap(todoList -> todosRepository.count()
+                .map(totalItemsCount -> PageMeta.build(todoList, request.getURI().getPath(), page, pageSize, totalItemsCount))
+                .map(pageMeta -> TodoListResponse.build(todoList, pageMeta)));
+
     }
 
-
-    private List<TodoSummaryDto> getTodos(List<Todo> todos) {
-        List<TodoSummaryDto> todoDtos = todos.stream().map(TodoSummaryDto::build).collect(Collectors.toList());
-        return todoDtos;
-    }
 }
