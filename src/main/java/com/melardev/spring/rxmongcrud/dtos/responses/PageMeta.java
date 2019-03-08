@@ -1,24 +1,22 @@
 package com.melardev.spring.rxmongcrud.dtos.responses;
 
 
-import reactor.core.publisher.Mono;
-
 import java.util.Collection;
 
 public class PageMeta {
-    boolean hasNext;
-    boolean hasPrevPage;
-    public int currentPage;
-    long totalItemsCount; // total cartItems in total
-    int pageSize; // max cartItems per page
-    int currentItemsCount; // cartItems in this page
-    int pageCount; // number of pages
-    long offset;
-    int nextPageNumber;
-    int prevPageNumber;
-    String nextPageUrl;
-    String prevPageUrl;
-    private Mono<Long> hook;
+    private boolean hasNextPage;
+    private boolean hasPrevPage;
+    private int currentPage;
+    private long totalItemsCount; // total cartItems in total
+    private int requestedPageSize; // max cartItems per page
+    private int currentItemsCount; // cartItems in this page
+    private int numberOfPages; // number of pages
+    private long offset;
+    private int nextPageNumber;
+    private int prevPageNumber;
+    private String nextPageUrl;
+    private String prevPageUrl;
+
 
     public PageMeta() {
     }
@@ -27,44 +25,41 @@ public class PageMeta {
     public static PageMeta build(Collection resources, String basePath, int page, int pageSize, Long totalItemsCount) {
         PageMeta pageMeta = new PageMeta();
         pageMeta.setOffset((page - 1) * pageSize);
-        pageMeta.setPageSize(pageSize);
+        pageMeta.setRequestedPageSize(pageSize);
         pageMeta.setCurrentItemsCount(resources.size());
         pageMeta.setCurrentPage(page);
 
 
         pageMeta.setTotalItemsCount(totalItemsCount);
-        pageMeta.setTotalPageCount((int) Math.ceil(pageMeta.getTotalItemsCount() / pageMeta.getPageSize()));
-        pageMeta.setHasNextPage(pageMeta.getCurrentPageNumber() < pageMeta.getPageCount());
+        pageMeta.setTotalPageCount((int) Math.ceil(pageMeta.getTotalItemsCount() / pageMeta.getRequestedPageSize()));
+        pageMeta.setHasNextPage(pageMeta.getCurrentPageNumber() < pageMeta.getNumberOfPages());
         pageMeta.setHasPrevPage(pageMeta.getCurrentPageNumber() > 1);
-        if (pageMeta.hasNext) {
+        if (pageMeta.hasNextPage) {
             pageMeta.setNextPageNumber(pageMeta.getCurrentPageNumber() + 1);
             pageMeta.setNextPageUrl(String.format("%s?page_size=%d&page=%d",
-                    basePath, pageMeta.getPageSize(), pageMeta.getNextPageNumber()));
+                    basePath, pageMeta.getRequestedPageSize(), pageMeta.getNextPageNumber()));
         } else {
-            pageMeta.setNextPageNumber(pageMeta.getPageCount());
+            pageMeta.setNextPageNumber(pageMeta.getNumberOfPages());
             pageMeta.setNextPageUrl(String.format("%s?page_size=%d&page=%d",
-                    basePath, pageMeta.getPageSize(), pageMeta.getNextPageNumber()));
+                    basePath, pageMeta.getRequestedPageSize(), pageMeta.getNextPageNumber()));
         }
 
         if (pageMeta.hasPrevPage) {
             pageMeta.setPrevPageNumber(pageMeta.getCurrentPageNumber() - 1);
 
             pageMeta.setPrevPageUrl(String.format("%s?page_size=%d&page=%d",
-                    basePath, pageMeta.getPageSize(),
+                    basePath, pageMeta.getRequestedPageSize(),
                     pageMeta.getPrevPageNumber()));
         } else {
             pageMeta.setPrevPageNumber(1);
             pageMeta.setPrevPageUrl(String.format("%s?page_size=%d&page=%d",
-                    basePath, pageMeta.getPageSize(), pageMeta.getPrevPageNumber()));
+                    basePath, pageMeta.getRequestedPageSize(), pageMeta.getPrevPageNumber()));
         }
 
         return pageMeta;
 
     }
 
-    private void setHook(Mono<Long> hook) {
-        this.hook = hook;
-    }
 
     public void setPrevPageUrl(String prevPageUrl) {
         this.prevPageUrl = prevPageUrl;
@@ -79,7 +74,7 @@ public class PageMeta {
     }
 
     private void setHasNextPage(boolean hasNext) {
-        this.hasNext = hasNext;
+        this.hasNextPage = hasNext;
     }
 
     public void setOffset(long offset) {
@@ -90,12 +85,12 @@ public class PageMeta {
         return offset;
     }
 
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
+    public void setRequestedPageSize(int requestedPageSize) {
+        this.requestedPageSize = requestedPageSize;
     }
 
-    public int getPageSize() {
-        return pageSize;
+    public int getRequestedPageSize() {
+        return requestedPageSize;
     }
 
     public void setCurrentItemsCount(int currentItemsCount) {
@@ -107,11 +102,11 @@ public class PageMeta {
     }
 
     public void setTotalPageCount(int pageCount) {
-        this.pageCount = pageCount;
+        this.numberOfPages = pageCount;
     }
 
-    public int getPageCount() {
-        return pageCount;
+    public int getNumberOfPages() {
+        return numberOfPages;
     }
 
     public void setNextPageNumber(int nextPageNumber) {
@@ -154,8 +149,8 @@ public class PageMeta {
         return currentPage;
     }
 
-    public boolean isHasNext() {
-        return hasNext;
+    public boolean isHasNextPage() {
+        return hasNextPage;
     }
 
     public boolean isHasPrevPage() {
@@ -170,7 +165,4 @@ public class PageMeta {
         return currentPage;
     }
 
-    public Mono<Long> getHook() {
-        return hook;
-    }
 }
