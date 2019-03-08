@@ -135,7 +135,7 @@ This client side E-commerce application is also implemented using other client s
 - Ember
 - Vanilla javascript
 
-# Follow me
+# Social media links
 - [Youtube Channel](https://youtube.com/melardev)
 - [Blog](http://melardev.com)
 - [Twitter](https://twitter.com/@melardev)

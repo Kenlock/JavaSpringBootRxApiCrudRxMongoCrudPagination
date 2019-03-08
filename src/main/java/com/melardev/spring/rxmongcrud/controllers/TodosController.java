@@ -55,7 +55,14 @@ public class TodosController {
 
         Mono<ResponseEntity<AppResponse>> res = todosRepository.findById(id)
                 .flatMap(t -> {
-                    t.setDescription(todoInput.getDescription());
+                    String title = todoInput.getTitle();
+                    if (title != null)
+                        t.setTitle(title);
+
+                    String description = todoInput.getDescription();
+                    if (description != null)
+                        t.setDescription(description);
+
                     t.setCompleted(todoInput.isCompleted());
                     return todosRepository.save(t).map(te -> (AppResponse) new TodoDetailsResponse(te));
                 }).map(ResponseEntity::ok).defaultIfEmpty(new ResponseEntity<>(new AppResponse(false, "Not found"), HttpStatus.NOT_FOUND));
