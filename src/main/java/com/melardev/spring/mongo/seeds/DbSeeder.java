@@ -1,10 +1,9 @@
-package com.melardev.spring.rxmongcrud.seeds;
+package com.melardev.spring.mongo.seeds;
 
 
 import com.github.javafaker.Faker;
-import com.melardev.spring.rxmongcrud.entities.Todo;
-import com.melardev.spring.rxmongcrud.repositories.TodosRepository;
-import com.mongodb.BasicDBObject;
+import com.melardev.spring.mongo.entities.Todo;
+import com.melardev.spring.mongo.repositories.TodosRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package com.melardev.spring.rxmongcrud.dtos.responses;
+package com.melardev.spring.mongo.dtos.responses;
 
 public class ErrorResponse extends AppResponse {
 

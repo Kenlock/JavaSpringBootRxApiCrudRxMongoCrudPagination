@@ -1,7 +1,7 @@
-package com.melardev.spring.rxmongcrud.entities.auditors;
+package com.melardev.spring.mongo.entities.auditors;
 
 
-import com.melardev.spring.rxmongcrud.entities.TimeStampedDocument;
+import com.melardev.spring.mongo.entities.TimeStampedDocument;
 import org.springframework.data.mongodb.core.mapping.event.*;
 import org.springframework.stereotype.Component;
 

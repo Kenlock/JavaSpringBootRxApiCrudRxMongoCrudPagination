@@ -1,8 +1,8 @@
-package com.melardev.spring.rxmongcrud.dtos.responses;
+package com.melardev.spring.mongo.dtos.responses;
 
 
 
-import com.melardev.spring.rxmongcrud.entities.Todo;
+import com.melardev.spring.mongo.entities.Todo;
 
 import java.time.LocalDateTime;
 

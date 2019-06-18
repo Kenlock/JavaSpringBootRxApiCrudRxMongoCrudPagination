@@ -1,9 +1,9 @@
-package com.melardev.spring.rxmongcrud.controllers;
+package com.melardev.spring.mongo.controllers;
 
 
-import com.melardev.spring.rxmongcrud.dtos.responses.*;
-import com.melardev.spring.rxmongcrud.entities.Todo;
-import com.melardev.spring.rxmongcrud.repositories.TodosRepository;
+import com.melardev.spring.mongo.dtos.responses.*;
+import com.melardev.spring.mongo.entities.Todo;
+import com.melardev.spring.mongo.repositories.TodosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,19 +30,37 @@ public class TodosController {
                                               @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
         Pageable pageRequest = PageRequest.of(page, pageSize);
         Flux<Todo> todos = todosRepository.findAll(pageRequest);
-        Mono<AppResponse> response = getResponseFromTodosFlux(todos, request, page, pageSize);
+        Mono<AppResponse> response = getResponseFromTodosFlux(todos, todosRepository.count(), request, page, pageSize);
         return response;
     }
 
+    @GetMapping("/pending")
+    public Mono<AppResponse> getPending(ServerHttpRequest request,
+                                        @RequestParam(value = "page", defaultValue = "1") int page,
+                                        @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
+        Pageable pageRequest = PageRequest.of(page, pageSize);
+        Flux<Todo> todos = todosRepository.findByCompletedFalse(pageRequest);
+        Mono<AppResponse> response = getResponseFromTodosFlux(todos, todosRepository.countByCompletedIsFalse(), request, page, pageSize);
+        return response;
+    }
+
+    @GetMapping("/completed")
+    public Mono<AppResponse> getCompleted(ServerHttpRequest request,
+                                          @RequestParam(value = "page", defaultValue = "1") int page,
+                                          @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
+        Pageable pageRequest = PageRequest.of(page, pageSize);
+        Flux<Todo> todos = todosRepository.findByCompletedIsTrue(pageRequest);
+        Mono<AppResponse> response = getResponseFromTodosFlux(todos, todosRepository.countByCompletedIsTrue(), request, page, pageSize);
+        return response;
+    }
 
     @GetMapping("/{id}")
-    public Mono<? extends AppResponse> get(@PathVariable("id") String id) {
+    public Mono<? extends AppResponse> getById(@PathVariable("id") String id) {
         Mono<Todo> res = this.todosRepository.findById(id).switchIfEmpty(Mono.error(new RuntimeException("Not Found " + id)));
         // return res.<AppResponse>map(TodoDetailsResponse::new);
         Mono<AppResponse> responseMono = res.map(TodoDetailsResponse::new);
         return responseMono;
     }
-
 
     @PostMapping
     public Mono<? extends AppResponse> create(@Valid @RequestBody Todo todo) {
@@ -69,21 +87,6 @@ public class TodosController {
         return res;
     }
 
-    @PutMapping("/{id}/2")
-    public Mono<ResponseEntity<Todo>> update2(@PathVariable("id") String id,
-                                              @RequestBody Todo todo) {
-        System.out.println("Update Customer with ID = " + id + "...");
-
-        return todosRepository.findById(id).flatMap(customerData -> {
-            customerData.setTitle(todo.getTitle());
-            customerData.setDescription(todo.getDescription());
-            customerData.setCompleted(todo.isCompleted());
-            return todosRepository.save(customerData);
-        }).map(updatedcustomer -> new ResponseEntity<>(updatedcustomer, HttpStatus.OK))
-                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    // Spring-reactive-sample returns Mono<Void>
     @DeleteMapping("/{id}")
     public ResponseEntity<AppResponse> delete(@PathVariable("id") String id) {
         try {
@@ -104,33 +107,13 @@ public class TodosController {
         return new ResponseEntity<>(new SuccessResponse("Deleted successfully"), HttpStatus.OK);
     }
 
-    @GetMapping("/pending")
-    public Mono<AppResponse> getPending(ServerHttpRequest request,
-                                        @RequestParam(value = "page", defaultValue = "1") int page,
-                                        @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
-        Pageable pageRequest = PageRequest.of(page, pageSize);
-        Flux<Todo> todos = todosRepository.findByCompletedFalse(pageRequest);
-        Mono<AppResponse> response = getResponseFromTodosFlux(todos, request, page, pageSize);
-        return response;
-    }
-
-
-    @GetMapping("/completed")
-    public Mono<AppResponse> getCompleted(ServerHttpRequest request,
-                                          @RequestParam(value = "page", defaultValue = "1") int page,
-                                          @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
-        Pageable pageRequest = PageRequest.of(page, pageSize);
-        Flux<Todo> todos = todosRepository.findByCompletedIsTrue(pageRequest);
-        Mono<AppResponse> response = getResponseFromTodosFlux(todos, request, page, pageSize);
-        return response;
-    }
 
     @GetMapping("/completed/simple")
     public Flux<Todo> getCompleted() {
         return todosRepository.findByCompletedIsTrue();
     }
 
-    private Mono<AppResponse> getResponseFromTodosFlux(Flux<Todo> todos, ServerHttpRequest request, int page, int pageSize) {
+    private Mono<AppResponse> getResponseFromTodosFlux(Flux<Todo> todos, Mono<Long> count, ServerHttpRequest request, int page, int pageSize) {
         // All credits go for @cheron.antoine, he gave me the solution for making this to work:
         // https://medium.com/@cheron.antoine/reactor-java-2-how-to-manipulate-the-data-inside-mono-and-flux-b36ae383b499
 
@@ -154,7 +137,7 @@ public class TodosController {
         */
 
         // Less readable but less code, read the above if this one is hard to read, they are equivalent
-        return todos.collectList().flatMap(todoList -> todosRepository.count()
+        return todos.collectList().flatMap(todoList -> count
                 .map(totalItemsCount -> PageMeta.build(todoList, request.getURI().getPath(), page, pageSize, totalItemsCount))
                 .map(pageMeta -> TodoListResponse.build(todoList, pageMeta)));
 

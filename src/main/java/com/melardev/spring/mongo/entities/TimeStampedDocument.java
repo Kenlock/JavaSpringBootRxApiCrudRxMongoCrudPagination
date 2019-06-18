@@ -1,4 +1,4 @@
-package com.melardev.spring.rxmongcrud.entities;
+package com.melardev.spring.mongo.entities;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 

@@ -1,4 +1,4 @@
-package com.melardev.spring.rxmongcrud;
+package com.melardev.spring.mongo;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -7,7 +7,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class RxMongCrudApplicationTests {
+public class RxMongoCrudApplicationTests {
 
     @Test
     public void contextLoads() {

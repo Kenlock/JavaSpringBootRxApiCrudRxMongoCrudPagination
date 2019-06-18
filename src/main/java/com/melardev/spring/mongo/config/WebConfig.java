@@ -1,26 +1,19 @@
-package com.melardev.spring.rxmongcrud;
+package com.melardev.spring.mongo.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.stereotype.Component;
 import org.springframework.web.server.WebFilter;
 
-@SpringBootApplication
-public class RxMongCrudApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(RxMongCrudApplication.class, args);
-    }
-
+@Configuration
+public class WebConfig {
     @Bean
     public Jackson2ObjectMapperBuilder objectMapperBuilder() {
         Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();

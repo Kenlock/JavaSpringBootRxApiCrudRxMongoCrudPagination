@@ -1,4 +1,4 @@
-package com.melardev.spring.rxmongcrud.filters;
+package com.melardev.spring.mongo.filters;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
