@@ -28,7 +28,7 @@ public class TodosController {
     public Mono<? extends AppResponse> getAll(ServerHttpRequest request,
                                               @RequestParam(value = "page", defaultValue = "1") int page,
                                               @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
-        Pageable pageRequest = PageRequest.of(page, pageSize);
+        Pageable pageRequest = PageRequest.of(page - 1, pageSize);
         Flux<Todo> todos = todosRepository.findAll(pageRequest);
         Mono<AppResponse> response = getResponseFromTodosFlux(todos, todosRepository.count(), request, page, pageSize);
         return response;
@@ -38,7 +38,7 @@ public class TodosController {
     public Mono<AppResponse> getPending(ServerHttpRequest request,
                                         @RequestParam(value = "page", defaultValue = "1") int page,
                                         @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
-        Pageable pageRequest = PageRequest.of(page, pageSize);
+        Pageable pageRequest = PageRequest.of(page - 1, pageSize);
         Flux<Todo> todos = todosRepository.findByCompletedFalse(pageRequest);
         Mono<AppResponse> response = getResponseFromTodosFlux(todos, todosRepository.countByCompletedIsFalse(), request, page, pageSize);
         return response;
@@ -48,7 +48,7 @@ public class TodosController {
     public Mono<AppResponse> getCompleted(ServerHttpRequest request,
                                           @RequestParam(value = "page", defaultValue = "1") int page,
                                           @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
-        Pageable pageRequest = PageRequest.of(page, pageSize);
+        Pageable pageRequest = PageRequest.of(page - 1, pageSize);
         Flux<Todo> todos = todosRepository.findByCompletedIsTrue(pageRequest);
         Mono<AppResponse> response = getResponseFromTodosFlux(todos, todosRepository.countByCompletedIsTrue(), request, page, pageSize);
         return response;
