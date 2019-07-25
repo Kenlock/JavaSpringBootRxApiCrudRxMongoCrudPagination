@@ -2,7 +2,8 @@ package com.melardev.spring.mongo.entities.auditors;
 
 
 import com.melardev.spring.mongo.entities.TimeStampedDocument;
-import org.springframework.data.mongodb.core.mapping.event.*;
+import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

@@ -15,6 +15,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
+import java.util.function.Function;
 
 //@CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -30,8 +31,7 @@ public class TodosController {
                                               @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
         Pageable pageRequest = PageRequest.of(page - 1, pageSize);
         Flux<Todo> todos = todosRepository.findAll(pageRequest);
-        Mono<AppResponse> response = getResponseFromTodosFlux(todos, todosRepository.count(), request, page, pageSize);
-        return response;
+        return getResponseFromTodosFlux(todos, todosRepository.count(), request, page, pageSize);
     }
 
     @GetMapping("/pending")
@@ -40,8 +40,7 @@ public class TodosController {
                                         @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
         Pageable pageRequest = PageRequest.of(page - 1, pageSize);
         Flux<Todo> todos = todosRepository.findByCompletedFalse(pageRequest);
-        Mono<AppResponse> response = getResponseFromTodosFlux(todos, todosRepository.countByCompletedIsFalse(), request, page, pageSize);
-        return response;
+        return getResponseFromTodosFlux(todos, todosRepository.countByCompletedIsFalse(), request, page, pageSize);
     }
 
     @GetMapping("/completed")
@@ -50,16 +49,14 @@ public class TodosController {
                                           @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
         Pageable pageRequest = PageRequest.of(page - 1, pageSize);
         Flux<Todo> todos = todosRepository.findByCompletedIsTrue(pageRequest);
-        Mono<AppResponse> response = getResponseFromTodosFlux(todos, todosRepository.countByCompletedIsTrue(), request, page, pageSize);
-        return response;
+        return getResponseFromTodosFlux(todos, todosRepository.countByCompletedIsTrue(), request, page, pageSize);
     }
 
     @GetMapping("/{id}")
-    public Mono<? extends AppResponse> getById(@PathVariable("id") String id) {
-        Mono<Todo> res = this.todosRepository.findById(id).switchIfEmpty(Mono.error(new RuntimeException("Not Found " + id)));
-        // return res.<AppResponse>map(TodoDetailsResponse::new);
-        Mono<AppResponse> responseMono = res.map(TodoDetailsResponse::new);
-        return responseMono;
+    public Mono<ResponseEntity<? extends AppResponse>> getById(@PathVariable("id") String id) {
+        return this.todosRepository.findById(id)
+                .map((Function<Todo, ResponseEntity<? extends AppResponse>>) todo -> ResponseEntity.ok().body(new TodoDetailsResponse(todo)))
+                .defaultIfEmpty(new ResponseEntity<>(new ErrorResponse("Todo not found"), HttpStatus.NOT_FOUND));
     }
 
     @PostMapping
@@ -71,7 +68,7 @@ public class TodosController {
     @PutMapping("/{id}")
     public Mono<ResponseEntity<AppResponse>> update(@PathVariable("id") String id, @RequestBody Todo todoInput) {
 
-        Mono<ResponseEntity<AppResponse>> res = todosRepository.findById(id)
+        return todosRepository.findById(id)
                 .flatMap(t -> {
                     String title = todoInput.getTitle();
                     if (title != null)
@@ -82,31 +79,26 @@ public class TodosController {
                         t.setDescription(description);
 
                     t.setCompleted(todoInput.isCompleted());
-                    return todosRepository.save(t).map(te -> (AppResponse) new TodoDetailsResponse(te));
-                }).map(ResponseEntity::ok).defaultIfEmpty(new ResponseEntity<>(new AppResponse(false, "Not found"), HttpStatus.NOT_FOUND));
-        return res;
+                    return todosRepository.save(t).map(te -> (AppResponse) new TodoDetailsResponse(te, "Todo updated successfully"));
+                }).map(ResponseEntity::ok)
+                .defaultIfEmpty(new ResponseEntity<>(new AppResponse(false, "Not found"), HttpStatus.NOT_FOUND));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<AppResponse> delete(@PathVariable("id") String id) {
-        try {
-            todosRepository.deleteById(id).subscribe();
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorResponse("Something went wrong"), HttpStatus.EXPECTATION_FAILED);
-        }
-        return new ResponseEntity<>(new SuccessResponse("Deleted successfully"), HttpStatus.OK);
+    public Mono<ResponseEntity<AppResponse>> delete(@PathVariable("id") String id) {
+
+        return todosRepository.findById(id)
+                .flatMap(t -> todosRepository.delete(t)
+                        .then(Mono.<ResponseEntity<AppResponse>>just(ResponseEntity.ok().body(new SuccessResponse("Todo deleted successfully")
+                        ))))
+                .defaultIfEmpty(new ResponseEntity<>(new ErrorResponse("Todo not found"), HttpStatus.NOT_FOUND));
     }
 
     @DeleteMapping
-    public ResponseEntity<AppResponse> deleteAll() {
-        try {
-            todosRepository.deleteAll().subscribe();
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorResponse("Something went wrong"), HttpStatus.EXPECTATION_FAILED);
-        }
-        return new ResponseEntity<>(new SuccessResponse("Deleted successfully"), HttpStatus.OK);
+    public Mono<ResponseEntity<AppResponse>> deleteAll() {
+        return todosRepository.deleteAll()
+                .then(Mono.<ResponseEntity<AppResponse>>just(ResponseEntity.ok().body(new SuccessResponse("Todos deleted successfully"))));
     }
-
 
     @GetMapping("/completed/simple")
     public Flux<Todo> getCompleted() {

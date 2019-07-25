@@ -5,7 +5,7 @@ import com.github.javafaker.Faker;
 import com.melardev.spring.mongo.entities.Todo;
 import com.melardev.spring.mongo.repositories.TodosRepository;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -22,9 +22,9 @@ public class DbSeeder implements CommandLineRunner {
     private final TodosRepository todosRepository;
 
     private final Faker faker;
-    private final MongoTemplate mongoTemplate;
+    private final ReactiveMongoTemplate mongoTemplate;
 
-    public DbSeeder(TodosRepository todosRepository, MongoTemplate mongoTemplate) {
+    public DbSeeder(TodosRepository todosRepository, ReactiveMongoTemplate mongoTemplate) {
         this.todosRepository = todosRepository;
         faker = new Faker(Locale.getDefault());
         this.mongoTemplate = mongoTemplate;
